@@ -44,11 +44,3 @@ Para executar os testes utilizando Maven:
 ```bash
 mvn test
 ```
-
-## Passo a passo para adicionar no GitHub
-
-No seu projeto local:
-
-```bash
-touch README.md
-```
