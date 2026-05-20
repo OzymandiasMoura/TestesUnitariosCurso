@@ -95,7 +95,7 @@ class UsuarioServiceTest
 
         Mockito.when(repository.getUserByEmail(usuario.getEmail())).thenReturn(Optional.empty());
 
-        Mockito.when(repository.salvar(usuario)).thenReturn(UsuarioBuilder.novoUsuario().criar());
+        Mockito.when(repository.save(usuario)).thenReturn(UsuarioBuilder.novoUsuario().criar());
 
         Usuario response = service.salvar(usuario);
 
@@ -103,7 +103,7 @@ class UsuarioServiceTest
 
         //Usar dessa forma garante que os metodos foram chamados e usados dentro do código. É importante para garantir a integridade do código, forçando a realizar a validação. Se o metodo não for chamado, ele vai falhar o teste
         Mockito.verify(repository).getUserByEmail(usuario.getEmail());
-        Mockito.verify(repository).salvar(usuario);
+        Mockito.verify(repository).save(usuario);
     }
 
     @Test
@@ -122,6 +122,6 @@ class UsuarioServiceTest
         assertEquals("Email já cadastrado no sistema.", exception.getMessage());
 
         //Verifiquei que o metodo que realmente salva o usuario nunca foi chamado
-        Mockito.verify(repository, Mockito.never()).salvar(usuario);
+        Mockito.verify(repository, Mockito.never()).save(usuario);
     }
 }

@@ -14,14 +14,17 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// @EnabledIf(value = "isHoraValida") condicionar a execução do teste a alguma condição.
 @ExtendWith(MockitoExtension.class)
 class TransacaoServiceTest
 {
@@ -36,27 +39,36 @@ class TransacaoServiceTest
         Transacao transacaoPersistida = TransacaoBuilder.novaTransacao().criar();
         Mockito.when(dao.salvar(transacaoParaSalvar)).thenReturn(transacaoPersistida);
 
-        Transacao transacaoSalva = service.salvar(transacaoParaSalvar);
+        LocalDateTime dataDesejada =  LocalDateTime.of(2026, 1, 1, 4,0);
 
-        assertNotNull(transacaoSalva.getId());
-        assertEquals(transacaoPersistida, transacaoSalva);
-        //Encadeamento de assertivas usando o assertAll
-        assertAll("Atributos da Transação",
-                () -> assertEquals(1L, transacaoSalva.getId()),
-                () -> assertEquals("Transação Criada", transacaoSalva.getDescricao()),
-                () -> assertEquals(0.0, transacaoSalva.getValor()),
-                () -> {
-                    assertAll("Atributos da Conta",
-                            () -> assertEquals(1l, transacaoSalva.getConta().getId()),
-                            () -> assertEquals("Conta", transacaoSalva.getConta().getNome()),
-                            () -> {
-                                assertAll("Atributos do Usuario",
-                                        () -> assertEquals("Usuário", transacaoSalva.getConta().getUsuario().getNome())
-                                        );
-                            }
-                            );
-                }
-                );
+        //Isso é necessário para criar mock de methods static
+        //Poderia criar uma interface entre meu código e o LocalDateTime para que eu possa chamar da maneira normal e usar o mock do jeito normal. Ou até mesmo methods normais, mas que atuem como interface para a função estática
+        try(MockedStatic<LocalDateTime> ldt = Mockito.mockStatic(LocalDateTime.class))
+        {
+            ldt.when(LocalDateTime::now).thenReturn(dataDesejada);
+
+            Transacao transacaoSalva = service.salvar(transacaoParaSalvar);
+
+            assertNotNull(transacaoSalva.getId());
+            assertEquals(transacaoPersistida, transacaoSalva);
+            //Encadeamento de assertivas usando o assertAll
+            assertAll("Atributos da Transação",
+                    () -> assertEquals(1L, transacaoSalva.getId()),
+                    () -> assertEquals("Transação Criada", transacaoSalva.getDescricao()),
+                    () -> assertEquals(0.0, transacaoSalva.getValor()),
+                    () -> {
+                        assertAll("Atributos da Conta",
+                                () -> assertEquals(1l, transacaoSalva.getConta().getId()),
+                                () -> assertEquals("Conta", transacaoSalva.getConta().getNome()),
+                                () -> {
+                                    assertAll("Atributos do Usuario",
+                                            () -> assertEquals("Usuário", transacaoSalva.getConta().getUsuario().getNome())
+                                    );
+                                }
+                        );
+                    }
+            );
+        }
     }
 
     @ParameterizedTest
@@ -64,15 +76,23 @@ class TransacaoServiceTest
     @DisplayName("Deve validar atributos obrigatórios ao salvar")
     public void deveValidarAtributosObrigatoriosSalvar(Long id, String descricao, Double valor, Conta conta, LocalDate data, Boolean status, String message)
     {
-        ValidationException exception = assertThrows(ValidationException.class, () ->
+        LocalDateTime dataDesejada =  LocalDateTime.of(2026, 1, 1, 4,0);
+
+        try(MockedStatic<LocalDateTime> ldt = Mockito.mockStatic(LocalDateTime.class))
         {
-            Transacao transacaoParaSalvar =
-                    TransacaoBuilder.novaTransacao().setId(id).setDescricao(descricao).setValor(valor).setData(data).setConta(conta).setStatus(status).criar();
+            ldt.when(LocalDateTime::now).thenReturn(dataDesejada);
 
-            service.salvar(transacaoParaSalvar);
-        });
+            ValidationException exception = assertThrows(ValidationException.class, () ->
+            {
+                Transacao transacaoParaSalvar =
+                        TransacaoBuilder.novaTransacao().setId(id).setDescricao(descricao).setValor(valor).setData(data).setConta(conta).setStatus(status).criar();
 
-        assertEquals(message, exception.getMessage());
+                service.salvar(transacaoParaSalvar);
+            });
+            //Posso verificar a quantidade de chamadas do static method.
+            ldt.verify(LocalDateTime::now);
+            assertEquals(message, exception.getMessage());
+        }
     }
 
     static Stream<Arguments> camposObrigatorios()
@@ -84,4 +104,9 @@ class TransacaoServiceTest
                 Arguments.of(1L, "Transação Criada", 10D, null, LocalDate.now(), true, "Conta é obrigatoria")
         );
     }
+//    É uma maneira de condicionar a execução dos testes
+//    public boolean isHoraValida()
+//    {
+//        return LocalDateTime.now().getHour() < 17;
+//    }
 }

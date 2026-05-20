@@ -4,11 +4,17 @@ import curso.testesunitarios2.dominio.Transacao;
 import curso.testesunitarios2.dominio.exceptions.ValidationException;
 import curso.testesunitarios2.repositories.TransacaoDAO;
 
+import java.time.LocalDateTime;
+
 public class TransacaoService
 {
     private TransacaoDAO dao;
     public Transacao salvar(Transacao transacao)
     {
+        if(LocalDateTime.now().getHour() > 10)
+        {
+            throw new RuntimeException("Tente novamente amanhã");
+        }
         if(transacao.getDescricao() == null || transacao.getDescricao().isEmpty()) throw new ValidationException(
                 "Descrição obrigatória");
         if(transacao.getValor() == null) throw new ValidationException("Valor é obrigatorio");

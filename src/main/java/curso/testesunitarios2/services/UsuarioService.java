@@ -24,7 +24,7 @@ public class UsuarioService
             throw new ValidationException("Email já cadastrado no sistema.");
         });
 
-        return repository.salvar(usuario);
+        return repository.save(usuario);
     }
 
     public Usuario getUserByEmail(String email)

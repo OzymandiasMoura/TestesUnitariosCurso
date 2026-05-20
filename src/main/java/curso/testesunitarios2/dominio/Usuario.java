@@ -2,6 +2,7 @@ package curso.testesunitarios2.dominio;
 
 import curso.testesunitarios2.dominio.exceptions.ValidationException;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,8 +13,10 @@ import java.util.Objects;
 //A classe está imutável por isso apenas o Getter sem o Setter
 @NoArgsConstructor
 @Getter
+@Entity
 public class Usuario
 {
+    @Id
     private Long id;
     private String nome;
     private String email;
@@ -34,8 +37,8 @@ public class Usuario
 
     public boolean equals(Object usuario)
     {
-        if(this == usuario) return true;
-        if(usuario == null || getClass() != usuario.getClass()) return false;
+        if (this == usuario) return true;
+        if (usuario == null || getClass() != usuario.getClass()) return false;
 
         Usuario outro = (Usuario) usuario;
         return Objects.equals(email, outro.email) && Objects.equals(senha, outro.senha) && Objects.equals(nome, outro.nome);
