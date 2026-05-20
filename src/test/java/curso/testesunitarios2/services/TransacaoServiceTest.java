@@ -109,4 +109,42 @@ class TransacaoServiceTest
 //    {
 //        return LocalDateTime.now().getHour() < 17;
 //    }
+
+    @Test
+    @DisplayName("Deve alterar o status para false quando vier nulo")
+    public void deveAlterarStatusParaFalseQuandoVinerNulo()
+    {
+        LocalDateTime dataDesejada =  LocalDateTime.of(2026, 1, 1, 4,0);
+
+        try(MockedStatic<LocalDateTime> ldt = Mockito.mockStatic(LocalDateTime.class)){
+            ldt.when(LocalDateTime::now).thenReturn(dataDesejada);
+
+            Transacao t = TransacaoBuilder.novaTransacao().setStatus(null).criar();
+
+            Mockito.when(dao.salvar(Mockito.any())).thenReturn(t);
+
+            Transacao resutado = service.salvar(t);
+
+            assertNotNull(resutado);
+            assertEquals(false, resutado.getStatus());
+            ldt.verify(LocalDateTime::now);
+        }
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar transação fora de hora")
+    public void deveRejeitarTransacaoForaHora()
+    {
+        LocalDateTime dataDesejada =  LocalDateTime.of(2026, 1, 1, 18,0);
+
+        try(MockedStatic<LocalDateTime> ldt = Mockito.mockStatic(LocalDateTime.class))
+        {
+            ldt.when(LocalDateTime::now).thenReturn(dataDesejada);
+
+            Transacao t = TransacaoBuilder.novaTransacao().criar();
+            RuntimeException resutado = assertThrows(RuntimeException.class, () -> {service.salvar(t);});
+
+            assertEquals("Tente novamente amanhã", resutado.getMessage());
+        }
+    }
 }

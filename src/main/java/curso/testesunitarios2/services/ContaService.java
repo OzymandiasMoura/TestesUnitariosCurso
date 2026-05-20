@@ -37,9 +37,4 @@ public class ContaService
 
         return contaSalva;
     }
-
-    public List<Conta> obterContasPorUsuario(Usuario usuario)
-    {
-        return repository.obterContasPorUsuario(usuario.getId());
-    }
 }
